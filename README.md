@@ -1,5 +1,13 @@
 # The Beacon Bot
 
+## 🔗 Links
+
+🔔 CHANNEL: https://t.me/JamBitPY
+
+💬 CHAT: https://t.me/JamBitChat
+
+💰 DONATION EVM ADDRESS: 0xe23380ae575D990BebB3b81DB2F90Ce7eDbB6dDa
+
 ## 🤖 | Features:
 - **Auto registration/login**
 - **Auto completion of all quests**
