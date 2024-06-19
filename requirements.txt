@@ -7,3 +7,4 @@ pydantic~=2.7.4
 art~=6.2
 random_string
 better_proxy
+Jam_Twitter_API
