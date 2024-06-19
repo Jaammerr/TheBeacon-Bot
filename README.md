@@ -7,12 +7,6 @@
 
 
 ## 📝 | Description:
-Login (Tweeter binding) works through the browser. 
-
-After binding, the browser closes and work continues using requests.
-
-Do not set too many threads, this may lead to unstable operation of the script.
-
 The script completes all quests except discord.
 
 
@@ -63,7 +57,6 @@ cd ../..
 ```
 3. **Install dependencies:**
 
-**REQUIRED CHROME TO BE INSTALLED**
 ```bash
 pip install -r requirements.txt
 ```

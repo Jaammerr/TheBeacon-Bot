@@ -11,7 +11,7 @@ from loader import config
 from .api import TheBeaconAPI
 from .exceptions.base import APIError
 from .wallet import Wallet
-from .twitter_connect import TwitterConnect
+from .twitter_connect import TwitterConnectModded
 
 
 class Bot(TheBeaconAPI):
@@ -203,8 +203,8 @@ class Bot(TheBeaconAPI):
 
     async def start(self) -> bool:
         try:
-            twitter_connect = TwitterConnect(self.account)
-            account = await twitter_connect.start_connect()
+            twitter_connect = TwitterConnectModded(session=self.session, account_data=self.account)
+            account = await twitter_connect.start()
 
             if not account:
                 return False

@@ -15,11 +15,11 @@ class TheBeaconAPI:
 
     def __init__(self, account_data: Account):
         self.account = account_data
+        self.session = self.setup_session()
 
         if self.account.access_token:
             self.token_info = decode_id_token(self.account.access_token)
-            self.session = self.setup_session()
-            self.session.cookies.update(self.account.cookies)
+            # self.session.cookies.update(self.account.cookies)
 
     @property
     def username(self) -> str:
