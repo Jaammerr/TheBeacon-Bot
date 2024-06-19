@@ -15,7 +15,6 @@ class Config(BaseModel):
     accounts: list[Account]
     eth_rpc: HttpUrl
     threads: PositiveInt
-    invisible_browser: bool
     max_timeout_for_login_account: PositiveInt
     delay_between_quests: PositiveInt
     delay_between_quests_verification: PositiveInt
