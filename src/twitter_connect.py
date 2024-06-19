@@ -186,26 +186,29 @@ class TwitterConnectModded:
             raise Exception(f"Failed to get access token: {response.text}")
 
     async def start(self) -> Account | bool:
-        try:
-            logger.info(f"Twitter: {self.account_data.auth_token} | Authorizing..")
-            twitter_account = TwitterAccount.run(auth_token=self.account_data.auth_token, proxy=self.account_data.proxy.as_url)
+        for _ in range(3):
+            try:
+                logger.info(f"Twitter: {self.account_data.auth_token} | Authorizing..")
+                twitter_account = TwitterAccount.run(auth_token=self.account_data.auth_token, proxy=self.account_data.proxy.as_url)
 
-            oauth_token = await self.get_oauth_token()
-            authorize_url = self.bind_account_v1(twitter_account, oauth_token)
+                oauth_token = await self.get_oauth_token()
+                authorize_url = self.bind_account_v1(twitter_account, oauth_token)
 
-            auth_code = await self.get_auth_code(authorize_url)
-            await self.get_access_token(auth_code)
+                auth_code = await self.get_auth_code(authorize_url)
+                await self.get_access_token(auth_code)
 
-            logger.success(f"Twitter: {self.account_data.auth_token} | Authorized")
-            return self.account_data
+                logger.success(f"Twitter: {self.account_data.auth_token} | Authorized")
+                return self.account_data
 
-        except TwitterAccountSuspended:
-            logger.error(f"Twitter: {self.account_data.auth_token} | Account Suspended")
+            except TwitterAccountSuspended:
+                logger.error(f"Twitter: {self.account_data.auth_token} | Account Suspended")
 
-        except TwitterError as error:
-            logger.error(f"Twitter: {self.account_data.auth_token} | Failed to authorize: {error.error_message} | {error.error_code}")
+            except TwitterError as error:
+                logger.error(f"Twitter: {self.account_data.auth_token} | Failed to authorize: {error.error_message} | {error.error_code}")
 
-        except Exception as error:
-            logger.error(f"Twitter: {self.account_data.auth_token} | Error while authorizing: {error}")
+            except Exception as error:
+                logger.error(f"Twitter: {self.account_data.auth_token} | Error while authorizing: {error} | Retrying..")
+                await asyncio.sleep(3)
+                continue
 
-        return False
+            return False

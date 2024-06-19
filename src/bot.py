@@ -4,6 +4,8 @@ import random_string
 from datetime import datetime
 from typing import Any
 
+from pydantic import ValidationError
+
 from models import Account
 from loguru import logger
 from loader import config
@@ -22,24 +24,48 @@ class Bot(TheBeaconAPI):
         if not account_data.mnemonic:
             account_data.mnemonic = self.wallet.mnemonic
 
-    async def process_complete_quest(
-        self, quest_id: str, description: str, reward_xp: int = 0
-    ):
-        for _ in range(2):
-            logger.info(
-                f"Account: {self.account.auth_token} | Verifying quest: {description}"
-            )
 
-            try:
+    async def process_verify_quest(self, quest_id: str) -> bool:
+        logger.info(
+            f"Account: {self.account.auth_token} | Verifying quest: {quest_id}"
+        )
+
+        try:
+            for _ in range(3):
                 response = await self.verify_quest(quest_id)
                 if response.data.status != "Verified":
                     logger.warning(
-                        f"Account: {self.account.auth_token} | Quest not verified: {description} | Retrying.."
+                        f"Account: {self.account.auth_token} | Quest not verified: {quest_id} | Retrying.."
                     )
                     await asyncio.sleep(3)
-                    return await self.process_complete_quest(
-                        quest_id, description, reward_xp
-                    )
+
+                else:
+                    return True
+
+            logger.error(f"Account: {self.account.auth_token} | Quest not verified: {quest_id} | Max retries exceeded")
+            return False
+
+        except ValidationError:
+            logger.error(
+                f"Account: {self.account.auth_token} | Failed to verify quest: {quest_id} | Received invalid response, skipping.."
+            )
+            return False
+
+        except Exception as error:
+            logger.error(
+                f"Account: {self.account.auth_token} | Failed to verify quest: {quest_id} | Error: {error} | Skipping.."
+            )
+            return False
+
+    async def process_complete_quest(
+        self, quest_id: str, description: str, reward_xp: int = 0
+    ) -> bool:
+        for _ in range(2):
+
+            try:
+                verification_status = await self.process_verify_quest(quest_id)
+                if not verification_status:
+                    return False
 
                 await asyncio.sleep(config.delay_between_quests_verification)
                 logger.info(
@@ -51,7 +77,7 @@ class Bot(TheBeaconAPI):
                     logger.success(
                         f"Account: {self.account.auth_token} | Quest completed: {description} | Reward: {reward_xp} XP"
                     )
-                    return
+                    return True
                 else:
                     logger.error(
                         f"Account: {self.account.auth_token} | Failed to complete quest: {description} | Response: {response} | Retrying.."
@@ -63,6 +89,9 @@ class Bot(TheBeaconAPI):
                     f"Account: {self.account.auth_token} | Failed to complete quest: {description} | Error: {error} | Retrying.."
                 )
                 await asyncio.sleep(3)
+
+        logger.error(f"Account: {self.account.auth_token} | Failed to complete quest: {description} | Max retries exceeded")
+        return False
 
     async def process_create_account(self) -> bool:
         logger.info(
@@ -114,28 +143,16 @@ class Bot(TheBeaconAPI):
         )
         return False
 
-    def get_available_quests(self, quests: Any) -> list:
-        available_quests = []
-
-        for quest in quests.data.quests:
-            if quest.UserQuest:
-                if quest.UserQuest[0].status != "Completed":
-
-                    if quest.shortDescription == "Connect your Discord":
-                        logger.info(
-                            f"Account: {self.account.auth_token} | Skipping quest: {quest.shortDescription}"
-                        )
-                        continue
-
-                    if quest.availableAt:
-                        formatted_time = datetime.strptime(
-                            quest.availableAt, "%Y-%m-%dT%H:%M:%S.%fZ"
-                        )
-                        if formatted_time < datetime.now():
-                            available_quests.append(quest)
-                    else:
-                        available_quests.append(quest)
-
+    @staticmethod
+    def get_available_quests(quests: Any, skip_quests: list[str]) -> list:
+        available_quests = [
+            quest for quest in quests.data.quests
+            if quest.id not in skip_quests
+            and quest.UserQuest
+            and quest.UserQuest[0].status != "Completed"
+            and quest.shortDescription != "Connect your Discord"
+            and (not quest.availableAt or datetime.strptime(quest.availableAt, "%Y-%m-%dT%H:%M:%S.%fZ") < datetime.now())
+        ]
         return available_quests
 
     async def process_open_chests(self):
@@ -152,33 +169,34 @@ class Bot(TheBeaconAPI):
                         f"Account: {self.account.auth_token} | Failed to open chest: {response}"
                     )
 
-            except APIError as error:
+            except (APIError, Exception) as error:
                 if "User cannot open chest" in str(error):
                     logger.info(
                         f"Account: {self.account.auth_token} | All chests are opened"
                     )
-                    return
 
                 elif "User not found" in str(error):
                     logger.warning(
                         f"Account: {self.account.auth_token} | Cannot open chest because loaded invalid wallet or wallet not approved"
                     )
-                    return
 
                 else:
                     logger.error(
                         f"Account: {self.account.auth_token} | Failed to open chest: {error}"
                     )
-                    return
+
+                return
 
             finally:
                 await asyncio.sleep(config.delay_between_chests)
 
     async def process_quests(self):
+        skip_quests = []
+
         while True:
             quests = await self.get_quests()
+            available_quests = self.get_available_quests(quests, skip_quests)
 
-            available_quests = self.get_available_quests(quests)
             logger.info(
                 f"Account: {self.account.auth_token} | Available quests: {len(available_quests)}"
             )
@@ -190,10 +208,13 @@ class Bot(TheBeaconAPI):
                         if not status:
                             return status
 
-                    await self.process_complete_quest(
+                    status = await self.process_complete_quest(
                         quest.id, quest.shortDescription, quest.xp
                     )
                     await asyncio.sleep(config.delay_between_quests)
+
+                    if not status:
+                        skip_quests.append(quest.id)
 
             else:
                 logger.info(
