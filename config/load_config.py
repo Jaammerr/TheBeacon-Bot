@@ -77,7 +77,6 @@ def load_config() -> Config:
         "delay_between_quests",
         "delay_between_quests_verification",
         "delay_between_chests",
-        "max_timeout_for_login_account",
         "eth_rpc"
     )
 
