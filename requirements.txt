@@ -1,0 +1,10 @@
+pyuseragents~=1.0.5
+noble_tls~=0.0.104
+loguru~=0.7.2
+web3~=6.19.0
+PyYAML~=6.0.1
+pydantic~=2.7.4
+art~=6.2
+random_string
+undetected-playwright-patch
+better_proxy

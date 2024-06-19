@@ -1,0 +1,9 @@
+threads: 10  # number of threads to run the bot
+eth_rpc: https://eth.llamarpc.com  # Ethereum RPC URL
+invisible_browser: True  # run the browser in the background (only for login)
+max_timeout_for_login_account: 20  # max timeout for login account in seconds (only for login)
+
+delay_between_quests: 5  # delay between quests in seconds
+delay_between_quests_verification: 5  # delay between quests verification in seconds
+delay_between_chests: 5  # delay between chests in seconds
+
