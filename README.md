@@ -39,8 +39,6 @@ ACCEPTING ONLY HTTP
 | Name              | Description                                                       |
 |-------------------|-------------------------------------------------------------------|
 | threads           | Number of accounts that will work simultaneously                  |
-| invisible_browser | run the browser in the background (only for login)                |
-| max_timeout_for_login_account     | max timeout for login account in seconds (only for login)         |
 | delay_between_quests       | delay between quests in seconds                                   |
 | delay_between_quests_verification       | delay between quests verification and claiming rewards in seconds |
 | delay_between_chests       | delay between open chests in seconds                              |
