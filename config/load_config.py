@@ -53,8 +53,9 @@ def get_proxies() -> list[Proxy]:
 
         try:
             for proxy in proxies:
-                proxy = Proxy.from_str(proxy.strip())
-                valid_proxies.append(proxy)
+                if proxy != "":
+                    proxy = Proxy.from_str(proxy.strip())
+                    valid_proxies.append(proxy)
 
         except Exception as error:
             logger.error(f"Error while parsing proxy <<{proxy}>>: {error}")
