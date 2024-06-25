@@ -12,6 +12,9 @@ class Account(BaseModel):
     proxy: Proxy
     mnemonic: str | None = None
 
+    class Config:
+        arbitrary_types_allowed = True
+
 
 class Config(BaseModel):
     accounts: list[Account]
