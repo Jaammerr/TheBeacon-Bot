@@ -14,6 +14,7 @@ from .api import TheBeaconAPI
 from .exceptions.base import APIError
 from .wallet import Wallet
 from .twitter_connect import TwitterConnectModded
+from .discord_connect import DiscordConnect
 
 
 class Bot(TheBeaconAPI):
@@ -150,7 +151,6 @@ class Bot(TheBeaconAPI):
             if quest.id not in skip_quests
             and quest.UserQuest
             and quest.UserQuest[0].status != "Completed"
-            and quest.shortDescription != "Connect your Discord"
             and (not quest.availableAt or datetime.strptime(quest.availableAt, "%Y-%m-%dT%H:%M:%S.%fZ") < datetime.now())
         ]
         return available_quests
@@ -190,6 +190,26 @@ class Bot(TheBeaconAPI):
             finally:
                 await asyncio.sleep(config.delay_between_chests)
 
+
+    async def process_connect_discord(self):
+        try:
+            discord_connect = DiscordConnect(session=self.session, account_data=self.account, twitter_sub=self.token_info["sub"])
+            discord_data = await discord_connect.start()
+
+            if not discord_data:
+                return False
+
+            await self.bind_discord(discord_data)
+            logger.success(f"Account: {self.account.auth_token} | Discord connected")
+            return True
+
+        except Exception as error:
+            logger.error(
+                f"Account: {self.account.auth_token} | Failed to connect discord: {error}"
+            )
+            return False
+
+
     async def process_quests(self):
         skip_quests = []
 
@@ -207,6 +227,18 @@ class Bot(TheBeaconAPI):
                         status = await self.process_create_account()
                         if not status:
                             return status
+
+                    elif quest.shortDescription == "Connect your Discord":
+                        if self.account.discord_token:
+                            status = await self.process_connect_discord()
+                            if not status:
+                                return status
+                        else:
+                            logger.warning(
+                                f"Account: {self.account.auth_token} | Discord token not provided, skipping.."
+                            )
+                            skip_quests.append(quest.id)
+                            continue
 
                     status = await self.process_complete_quest(
                         quest.id, quest.shortDescription, quest.xp

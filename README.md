@@ -15,7 +15,9 @@
 
 
 ## 📝 | Description:
-The script completes all quests except discord.
+This version supports automatic completion of discord quests
+
+Before starting, you need to join the discord server (thebeacon) yourself, or you can purchase software (discord joiner) - https://t.me/JamBitPY/64
 
 
 ## ⚙️ Config (config > settings.yaml):
@@ -24,6 +26,7 @@ The script completes all quests except discord.
 Accounts: data > accounts.txt | Format:
 - auth_token
 - auth_token:wallet_mnemonic/pk
+- auth_token:wallet_mnemonic/pk:discord_token
 
 Proxies: data > proxies.txt | Format:
 

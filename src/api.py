@@ -61,18 +61,18 @@ class TheBeaconAPI:
         return session
 
     async def send_request(
-        self,
-        request_type: Literal["POST", "GET"] = "POST",
-        method: str = None,
-        json_data: dict = None,
-        params: dict = None,
-        url: str = None,
-        headers: dict = None,
-        cookies: dict = None,
-        verify: bool = True,
+            self,
+            request_type: Literal["POST", "GET", "OPTIONS"] = "POST",
+            method: str = None,
+            json_data: dict = None,
+            params: dict = None,
+            url: str = None,
+            headers: dict = None,
+            cookies: dict = None,
+            verify: bool = True,
     ):
         def _verify_response(_response: dict) -> dict:
-            if "statusCode" in _response:
+            if all(key in _response for key in ("code", "message")) or "statusCode" in _response:
                 if _response["statusCode"] in (404, 500, 503, 403):
                     raise APIError(
                         f"{_response.get('message')} | Method: {method} | Url: {url}"
@@ -98,6 +98,13 @@ class TheBeaconAPI:
                     headers=headers if headers else self.session.headers,
                     cookies=cookies,
                 )
+
+        elif request_type == "OPTIONS":
+            response = await self.session.options(
+                url,
+                headers=headers if headers else self.session.headers,
+                cookies=cookies,
+            )
 
         else:
             if not url:
@@ -152,7 +159,7 @@ class TheBeaconAPI:
         )
 
     async def approve_username(
-        self, data: LoginData, username: str
+            self, data: LoginData, username: str
     ) -> ApproveUsernameData:
         headers = {
             "Accept": "application/json, text/plain, */*",
@@ -235,3 +242,29 @@ class TheBeaconAPI:
             },
         )
         return UserInfoV1Data(**response)
+
+    async def bind_discord(self, discord_data: LinkedDiscordData) -> dict:
+        json_data = {
+            'sub': f'CustomDiscord|{self.account.discord_app_id}',
+            'provider': 'Discord',
+            'username': discord_data.name,
+            'nickname': discord_data.nickname,
+            'picture': discord_data.picture,
+            'data': {
+                'email': discord_data.email,
+                'email_verified': discord_data.email_verified,
+                'nickname': discord_data.nickname,
+                'name': discord_data.name,
+                'picture': discord_data.picture,
+                'premium_type': discord_data.premium_type,
+                'locale': discord_data.locale,
+            },
+        }
+
+        return await self.send_request(
+            request_type="POST",
+            method=f"/users/{self.user_id}/link",
+            json_data=json_data,
+        )
+
+

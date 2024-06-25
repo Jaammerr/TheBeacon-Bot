@@ -25,7 +25,7 @@ def setup():
 def show_dev_info():
     os.system("cls")
     tprint("JamBit")
-    print("\033[36m" + "VERSION: " + "\033[34m" + "1.0" + "\033[34m")
+    print("\033[36m" + "VERSION: " + "\033[34m" + "3.0" + "\033[34m")
     print("\033[36m" + "Channel: " + "\033[34m" + "https://t.me/JamBitPY" + "\033[34m")
     print(
         "\033[36m"

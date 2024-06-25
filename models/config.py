@@ -4,6 +4,8 @@ from pydantic import BaseModel, PositiveInt, HttpUrl
 
 class Account(BaseModel):
     auth_token: str
+    discord_token: str | None = None
+    discord_app_id: str | None = None
     access_token: str | None = None
     id_token: str | None = None
     cookies: dict[str, str] | None = None

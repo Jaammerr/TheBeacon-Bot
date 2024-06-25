@@ -1,2 +1,3 @@
+auth_token:wallet:discord_token
+auth_token:wallet
 auth_token
-auth_token:wallet_mnemonic/pk

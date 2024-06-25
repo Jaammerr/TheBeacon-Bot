@@ -33,6 +33,15 @@ def get_accounts() -> "Account":
                     proxy=next(proxy_cycle),
                     mnemonic=parts[1].strip(),
                 )
+
+            elif len(parts) == 3:
+                yield Account(
+                    auth_token=parts[0].strip(),
+                    proxy=next(proxy_cycle),
+                    mnemonic=parts[1].strip(),
+                    discord_token=parts[2].strip(),
+                )
+
             else:
                 yield Account(auth_token=parts[0].strip(), proxy=next(proxy_cycle))
 
